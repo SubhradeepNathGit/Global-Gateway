@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectCoverflow } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
+import { useNavigate } from 'react-router-dom';
 
 const bannerData = [
   {
@@ -24,6 +25,13 @@ const bannerData = [
 ];
 
 const Banner = () => {
+  // Move useNavigate to the top level of the component
+  const navigate = useNavigate();
+
+  const handleDiscoverMore = () => {
+    navigate('/signup');
+  };
+
   return (
     <Box sx={{ width: '100vw', overflowX: 'hidden' }}>
       <Swiper
@@ -108,6 +116,7 @@ const Banner = () => {
                     backgroundColor: '#d83434',
                   },
                 }}
+                onClick={handleDiscoverMore}
               >
                 Discover More
               </Button>

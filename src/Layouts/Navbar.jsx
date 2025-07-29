@@ -156,6 +156,9 @@ const Navbar = () => {
 
   const toggleCartDrawer = () => setCartDrawerOpen(prev => !prev);
 
+  // Function to close cart drawer (for passing to Cart component)
+  const closeCartDrawer = () => setCartDrawerOpen(false);
+
   return (
     <>
       <AppBar
@@ -261,17 +264,17 @@ const Navbar = () => {
       </AppBar>
 
       <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerToggle}>
-        <Box sx={{ width: 260, pt: 2 }}>
+        <Box sx={{ width: 160, pt: 2 }}>
           {user && (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
               <Avatar src={avatarUrl || '/default-avatar.png'} alt="Profile" sx={{ width: 64, height: 64 }} />
-              <Button onClick={handleLogout} sx={{ color: 'white', mt: 1, textTransform: 'none' }}>
+              <Button onClick={handleLogout} sx={{ color: 'red', mt: 1, textTransform: 'none' }}>
                 Logout
               </Button>
               <Divider sx={{ width: '100%', my: 1 }} />
               <List>
                 <ListItemButton component={RouterLink} to="/dashboard" onClick={handleDrawerToggle}>
-                  <ListItemText primary="Dashboard" />
+                  <ListItemText primary="Profile" />
                 </ListItemButton>
                 <ListItemButton component={RouterLink} to="/cart" onClick={handleDrawerToggle}>
                   <ListItemText primary="My Cart" />
@@ -320,8 +323,8 @@ const Navbar = () => {
       </Drawer>
 
       <Drawer anchor="right" open={cartDrawerOpen} onClose={toggleCartDrawer}>
-        <Box sx={{ width: 350, p: 2 }}>
-          <Cart cartItems={cartItems} />
+        <Box sx={{ width: 580, p: 2 }}>
+          <Cart cartItems={cartItems} onCloseDrawer={closeCartDrawer} />
         </Box>
       </Drawer>
     </>

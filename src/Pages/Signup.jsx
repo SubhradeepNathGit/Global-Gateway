@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -19,6 +19,7 @@ const MotionBox = motion(Box);
 const AuthForm = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const navigate = useNavigate();
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -31,6 +32,57 @@ const AuthForm = () => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('info');
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+
+  // Common styling for all text fields
+  const textFieldStyles = {
+    width: '100%',
+    '& label': {
+      color: 'white',
+    },
+    '& label.Mui-focused': {
+      color: 'white',
+    },
+    '& .MuiInputBase-root': {
+      color: 'white',
+      backgroundColor: 'transparent',
+    },
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'transparent',
+      '& fieldset': {
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+      },
+      '&:hover fieldset': {
+        borderColor: 'white',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: 'white',
+      },
+    },
+    // Override Chrome autofill styles
+    '& input': {
+      '&:-webkit-autofill': {
+        WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+        WebkitTextFillColor: 'white !important',
+        backgroundColor: 'transparent !important',
+        transition: 'background-color 5000s ease-in-out 0s',
+      },
+      '&:-webkit-autofill:hover': {
+        WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+        WebkitTextFillColor: 'white !important',
+        backgroundColor: 'transparent !important',
+      },
+      '&:-webkit-autofill:focus': {
+        WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+        WebkitTextFillColor: 'white !important',
+        backgroundColor: 'transparent !important',
+      },
+      '&:-webkit-autofill:active': {
+        WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+        WebkitTextFillColor: 'white !important',
+        backgroundColor: 'transparent !important',
+      },
+    },
+  };
 
   useEffect(() => {
     const checkEmailConfirmation = async () => {
@@ -76,6 +128,11 @@ const AuthForm = () => {
         setMessage('Logged in successfully!');
         setMessageType('success');
         setShowSignupPrompt(false);
+        
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000); // Small delay to show success message
       }
     } else {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -97,7 +154,7 @@ const AuthForm = () => {
         return;
       }
 
-      await handleProfileCreation(userId);
+      setSignupStep('confirm');
     }
   };
 
@@ -114,7 +171,6 @@ const AuthForm = () => {
 
   const handleProfileCreation = async (userId) => {
     let filePath = null;
-    let publicUrl = null;
 
     if (file) {
       try {
@@ -130,11 +186,6 @@ const AuthForm = () => {
             upsert: true,
           });
         if (uploadError) throw uploadError;
-        const { data: publicData } = supabase
-          .storage
-          .from('avatars')
-          .getPublicUrl(filePath);
-        publicUrl = publicData?.publicUrl;
         setMessage('Image uploaded successfully!');
         setMessageType('success');
       } catch (error) {
@@ -167,6 +218,11 @@ const AuthForm = () => {
       setSignupStep('complete');
       setMessage('Signup complete! Welcome.');
       setMessageType('success');
+      
+      // Redirect to dashboard after successful signup
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000); // Slightly longer delay for signup completion
     }
 
     setUploading(false);
@@ -182,103 +238,121 @@ const AuthForm = () => {
     setFile(null);
   };
 
-  const handleTestPermissions = async () => {
-    const result = await checkUserPermissions();
-    console.log('Permission check result:', result);
-    setMessage('Check console for permission details');
-    setMessageType('info');
-  };
-
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        bgcolor: isDark ? 'background.default' : '#f6f5f7',
+        backgroundImage:`url(/Slider1.jpg)`,
+        backgroundSize: 'cover',
+        bgcolor: isDark ? 'background.default' : '#000000ff',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        px: 2,
       }}
     >
       <Box
         sx={{
-          width: '90%',
-          maxWidth: 1000,
+          mt: 10,
+        mb: 20,
+          width: '100%',
+          maxWidth: 1100,
           height: 600,
           display: 'flex',
-          overflow: 'hidden',
-          position: 'relative',
-          bgcolor: isDark ? 'background.paper' : '#fff',
-          borderRadius: 3,
           boxShadow: 10,
-          mt: 10,
-          mb: 10,
+          borderRadius: 4,
+          overflow: 'hidden',
         }}
       >
-        <MotionBox
-          animate={{ x: isLogin ? '0%' : '-100%' }}
-          transition={{ duration: 0.6 }}
+        <Box
           sx={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
+            bgcolor: isDark ? 'background.default' : '#000000ff',
             width: '50%',
-            height: '100%',
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),url('/Thubmnail.jpg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            color: '#fff',
-            zIndex: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            px: 4,
-            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          <Typography variant="h4" fontWeight="bold" mb={2}>
-            {isLogin ? 'Hello, Friend!' : 'Welcome Back!'}
-          </Typography>
-          <Typography variant="body1" mb={3}>
-            {isLogin
-              ? 'Enter your personal details and start your journey with us'
-              : 'To keep connected with us please login with your personal info'}
-          </Typography>
-          <Button
-            onClick={() => {
-              setIsLogin((prev) => !prev);
-              setSignupStep('form');
-              setMessage('');
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              top: 0,
+              left: 0,
             }}
-            variant="outlined"
-            sx={{ color: '#fff', borderColor: '#fff' }}
           >
-            {isLogin ? 'SIGN UP' : 'SIGN IN'}
-          </Button>
-        </MotionBox>
+            <source src="/14153564_2160_3840_60fps.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <Box
+            sx={{
+              bgcolor: isDark ? 'background.default' : '#000000ff',
+              position: 'relative',
+              zIndex: 1,
+              color: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              textAlign: 'center',
+              px: 4,
+              height: '100%',
+              background: 'rgba(0, 0, 0, 0.4)',
+            }}
+          >
+            <Typography variant="h4" fontWeight="bold" mb={2}>
+              {isLogin ? 'Hello, Traveller!' : 'Welcome Back!'}
+            </Typography>
+            <Typography variant="body1" mb={3}>
+              {isLogin
+                ? 'Enter your personal details to start your immigration journey with us'
+                : 'To keep connected with us please login with your personal info'}
+            </Typography>
+            <Button
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setSignupStep('form');
+                setMessage('');
+              }}
+              variant="outlined"
+              sx={{ color: 'white', borderColor: 'white' }}
+            >
+              {isLogin ? 'SIGN UP' : 'SIGN IN'}
+            </Button>
+          </Box>
+        </Box>
 
         <Box
           sx={{
+            mt: -2,
             width: '50%',
-            zIndex: 3,
-            transform: isLogin ? 'translateX(0%)' : 'translateX(100%)',
-            transition: 'transform 0.6s ease-in-out',
+            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(50px)',
+            color: '#fff',
             p: 5,
-            bgcolor: 'background.default',
-            color: 'text.primary',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '600px',
           }}
         >
-          <Typography variant="h4" fontWeight="bold" mb={2}>
+          <Typography sx={{color: 'white'}} variant="h4" fontWeight="bold" mb={2}>
             {isLogin ? 'Sign in' : 'Create Account'}
           </Typography>
 
           <Box display="flex" gap={1} mb={2}>
-            <IconButton><Facebook /></IconButton>
-            <IconButton><Google /></IconButton>
-            <IconButton><LinkedIn /></IconButton>
+            <IconButton sx={{color: 'white'}}><Facebook /></IconButton>
+            <IconButton sx={{color:'white'}}><Google /></IconButton>
+            <IconButton sx={{color:'white'}}><LinkedIn /></IconButton>
           </Box>
 
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="white">
             or use your {isLogin ? 'account' : 'email for registration'}
           </Typography>
 
@@ -290,12 +364,17 @@ const AuthForm = () => {
             flexDirection="column"
             gap={2}
             encType="multipart/form-data"
+            sx={{ 
+              width: '100%',
+              maxWidth: '100%',
+              overflow: 'hidden'
+            }}
           >
             {message && (
-              <Alert severity={messageType} sx={{ mt: 2 }}>
+              <Alert severity={messageType}>
                 {message}
                 {showSignupPrompt && (
-                  <Button color="primary" size="small" sx={{ ml: 2 }} onClick={() => setIsLogin(false)}>
+                  <Button size="small" onClick={() => setIsLogin(false)} sx={{ ml: 2 }}>
                     Sign Up
                   </Button>
                 )}
@@ -306,99 +385,74 @@ const AuthForm = () => {
               <>
                 {!isLogin && (
                   <>
-                    <TextField
-                      label="Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
+                    <TextField 
+                      sx={textFieldStyles} 
+                      label="Name" 
+                      value={name} 
+                      onChange={(e) => setName(e.target.value)} 
+                      required 
                     />
-                    <TextField
-                      label="Phone Number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
+                    <TextField 
+                      sx={textFieldStyles} 
+                      label="Phone Number" 
+                      value={phone} 
+                      onChange={(e) => setPhone(e.target.value)} 
+                      required 
                     />
                     <input
                       type="file"
                       accept="image/*"
                       required
                       onChange={(e) => setFile(e.target.files[0])}
-                      style={{ marginTop: '10px' }}
+                      style={{ marginTop: 8 }}
                     />
                   </>
                 )}
-                <TextField
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                <TextField 
+                  sx={textFieldStyles} 
+                  label="Email" 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
                 />
-                <TextField
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                <TextField 
+                  sx={textFieldStyles} 
+                  label="Password" 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
                 />
-                <Button variant="contained" type="submit" sx={{ mt: 1 }} disabled={uploading}>
+                <Button sx={{backgroundColor: 'black'}}  type="submit" variant="contained" disabled={uploading}>
                   {isLogin ? 'SIGN IN' : uploading ? 'UPLOADING...' : 'SIGN UP'}
                 </Button>
-
-                {!isLogin && (
-                  <Button variant="outlined" onClick={handleTestPermissions} sx={{ mt: 1 }} type="button">
-                    Test Permissions
-                  </Button>
-                )}
               </>
             )}
 
             {signupStep === 'confirm' && (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" mb={2}>
-                  Email Confirmation Required
-                </Typography>
-                <Typography variant="body2" mb={3}>
-                  We've sent a confirmation email to {email}. Please check your inbox and click the confirmation link.
-                </Typography>
-                <Button onClick={handleEmailConfirmation} variant="contained" disabled={uploading} sx={{ mr: 2 }}>
+              <Box textAlign="center">
+                <Typography variant="h6" mb={2}>Email Confirmation Required</Typography>
+                <Typography variant="body2" mb={3}>Check your inbox for a confirmation link.</Typography>
+                <Button onClick={handleEmailConfirmation} variant="contained" sx={{ mr: 2 }}>
                   {uploading ? <CircularProgress size={24} color="inherit" /> : "I've Confirmed My Email"}
                 </Button>
-                <Button onClick={resetForm} variant="outlined">
-                  Start Over
-                </Button>
+                <Button onClick={resetForm} variant="outlined">Start Over</Button>
               </Box>
             )}
 
             {signupStep === 'complete' && (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" mb={2} color="success.main">
-                  Welcome to Our Platform!
-                </Typography>
-                <Typography variant="body2" mb={3}>
-                  Your account has been created successfully. You can now log in and access your dashboard.
-                </Typography>
-                <Button
-                  onClick={() => {
-                    setIsLogin(true);
-                    setSignupStep('form');
-                    setMessage('');
-                  }}
-                  variant="contained"
-                  sx={{ mr: 2 }}
-                >
+              <Box textAlign="center">
+                <Typography variant="h6" color="success.main">Signup Complete!</Typography>
+                <Typography variant="body2" mb={3}>You can now log in and access your account.</Typography>
+                <Button onClick={() => { setIsLogin(true); resetForm(); }} variant="contained" sx={{ mr: 2 }}>
                   Sign In
-                </Button>
-                <Button onClick={resetForm} variant="outlined">
-                  Create Another Account
                 </Button>
               </Box>
             )}
 
             {isLogin && signupStep === 'form' && (
-              <Typography mt={1} fontSize={12}>
-                Forgot your password?
-              </Typography>
+              <Typography fontSize={12} mt={1}>Forgot your password?</Typography>
             )}
           </Box>
         </Box>

@@ -12,6 +12,7 @@ import ScrollToTop from '../Components/ScrollUp'
 import AuthForm from '../Pages/Signup'
 import Cart from '../Pages/Cart'
 import Dashboard from '../Pages/Dashboard'
+import CheckoutPage from '../Pages/Checkout'
 
 const Routing = () => {
   return (
@@ -28,6 +29,8 @@ const Routing = () => {
       <Route path="/signup" element={<AuthForm/>}/>
       <Route path="/cart" element={<Cart/>}/>
       <Route path="/dashboard" element={<Dashboard/>}/>
+       <Route path="/checkout" element={<CheckoutPage/>}/>
+
 
 
 

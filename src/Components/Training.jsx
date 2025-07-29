@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import {
   Box, Typography, Grid, Card, CardContent,
-  IconButton, Avatar, Dialog, DialogContent, Container, CardMedia
+  IconButton, Avatar, Dialog, DialogContent, Container, CardMedia, Button
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { useNavigate } from 'react-router-dom';
 
 const trainings = [
   {
@@ -206,6 +207,11 @@ const TrainingCard = ({ title, img, desc, avatar }) => {
 const Training = () => {
   const [openVideo, setOpenVideo] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
+
+  const handleGoToCourses = () => {
+    navigate('/coachingcards');
+  };
 
   return (
     <Box
@@ -320,6 +326,36 @@ const Training = () => {
               </Grid>
             ))}
           </Grid>
+        </Box>
+
+        {/* Go to Courses Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 4, md: 6 } }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleGoToCourses}
+            sx={{
+              borderColor: '#ef4444',
+              color: '#ef4444',
+              px: 4,
+              py: 1.5,
+              borderRadius: 2,
+              fontWeight: 600,
+              fontSize: '16px',
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: '#ef4444',
+                color: 'white',
+                borderColor: '#ef4444',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 20px rgba(239, 68, 68, 0.3)',
+              },
+            }}
+          >
+            Go to Courses
+          </Button>
         </Box>
       </Container>
 

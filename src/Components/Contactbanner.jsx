@@ -19,6 +19,25 @@ const ctaVariants = {
 };
 
 const ContactBanner = () => {
+  const handleCallClick = () => {
+    const userConfirmed = confirm(
+      '📞 Call Visa Consultation Services?\n\n' +
+      '🔹 Phone: +91 8777 777 777\n' +
+      '🔹 Available: Mon-Sat, 9 AM - 6 PM\n' +
+      '🔹 Free consultation for first-time callers\n\n' +
+      'Tap "OK" to dial now or "Cancel" to close.'
+    );
+    
+    if (userConfirmed) {
+      // Show brief loading message
+      alert('📱 Opening your phone app...\nGet ready to speak with our visa experts!');
+      // Small delay for better UX
+      setTimeout(() => {
+        window.location.href = 'tel:+918777777777';
+      }, 800);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -63,6 +82,7 @@ const ContactBanner = () => {
                 variant="contained"
                 size="large"
                 startIcon={<PhoneIcon />}
+                onClick={handleCallClick}
                 sx={{
                   backgroundColor: 'rgba(255, 255, 255, 0.15)',
                   backdropFilter: 'blur(10px)',

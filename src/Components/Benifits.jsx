@@ -140,9 +140,7 @@ const WhyChooseUs = () => {
                       {benefit.title}
                     </Typography>
                   </Box>
-                  <Box sx={{ ml: 'auto', color: '#ef4444', fontSize: '1.5rem' }}>
-                    →
-                  </Box>
+                  
                 </Box>
               ))}
             </Box>
@@ -176,7 +174,7 @@ const WhyChooseUs = () => {
               }}
             />
 
-            {/* 🛂 Stamp */}
+            {/* Stamp */}
             <motion.img
               src="/Stamp2.png"
               alt="Stamp"
@@ -193,7 +191,7 @@ const WhyChooseUs = () => {
               }}
             />
 
-            {/* 🧑‍💼 Main Image */}
+            {/* Main Image */}
             <motion.img
               src="/Choose.png"
               alt="Happy Man"
@@ -210,7 +208,7 @@ const WhyChooseUs = () => {
               }}
             />
 
-            {/* 🔴 Red Banner Below Image */}
+            {/* Banner Below Image */}
             <Box
               sx={{
                 mt: 0,

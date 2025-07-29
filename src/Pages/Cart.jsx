@@ -27,7 +27,18 @@ const MotionBox = motion(Box);
 const Cart = () => {
   const [visaCart, setVisaCart] = useState([]);
   const [courseCart, setCourseCart] = useState([]);
-  const [shipping, setShipping] = useState(70);
+  // Visa-related charges
+  const visaCharges = {
+    immigrationHealthSurcharge: 85000,
+    tbTest: 3000,
+    biometricVfsCharges: 1000
+  };
+
+  // Course-related charges (GST rates)
+  const gstRates = {
+    cgst: 0.09, // 9%
+    sgst: 0.09  // 9%
+  };
 
   const navigate = useNavigate();
 
@@ -80,30 +91,46 @@ const Cart = () => {
     return acc + price * (item.quantity || 1);
   }, 0);
 
-  const orderTotal = subtotal + shipping;
+  // Calculate additional charges based on cart contents
+  const hasVisa = visaCart.length > 0;
+  const hasCourse = courseCart.length > 0;
 
-  const handlePayment = async () => {
-    const items = [...visaCart, ...courseCart];
-    if (!items.length) return toast.error("Your cart is empty!");
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
-    if (!user) return toast.error("Login required!");
+  let additionalCharges = 0;
+  let chargeBreakdown = [];
 
-    const order = {
-      userId: user.id,
-      userName: user.user_metadata?.full_name || user.email,
-      visas: visaCart,
-      courses: courseCart,
-      total: orderTotal,
-      bookingId: uuidv4(),
-    };
+  if (hasVisa) {
+    additionalCharges += visaCharges.immigrationHealthSurcharge + visaCharges.tbTest + visaCharges.biometricVfsCharges;
+    chargeBreakdown.push(
+      { label: "Immigration Health Surcharge", amount: visaCharges.immigrationHealthSurcharge },
+      { label: "TB Test", amount: visaCharges.tbTest },
+      { label: "Biometric + VFS Charges", amount: visaCharges.biometricVfsCharges }
+    );
+  }
 
-    toast.success("Order placed!");
-    setTimeout(async () => {
-      await supabase.from("Visa Cart").delete().eq("user_id", user.id);
-      await supabase.from("Course Cart").delete().eq("user_id", user.id);
-      navigate("/booking_received", { state: order });
-    }, 1200);
+  if (hasCourse) {
+    const courseSubtotal = courseCart.reduce((acc, item) => {
+      const price = parseInt(item.price || "0");
+      return acc + price * (item.quantity || 1);
+    }, 0);
+    
+    const cgstAmount = courseSubtotal * gstRates.cgst;
+    const sgstAmount = courseSubtotal * gstRates.sgst;
+    
+    additionalCharges += cgstAmount + sgstAmount;
+    chargeBreakdown.push(
+      { label: "CGST (Central GST) 9%", amount: cgstAmount },
+      { label: "SGST (State GST) 9%", amount: sgstAmount }
+    );
+  }
+
+  const orderTotal = subtotal + additionalCharges;
+
+  const handleCheckout = () => {
+    if (!allCartItems.length) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+    navigate("/checkout");
   };
 
   // Desktop Cart Item Component
@@ -118,8 +145,9 @@ const Cart = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.1 }}
         sx={{
-          display: "grid",
-          gridTemplateColumns: "60px 3fr 1fr 1fr 1fr 1fr 40px",
+          display: { xs: "flex", md: "grid" },
+          gridTemplateColumns: { md: "60px 3fr 1fr 1fr 1fr 1fr 40px" },
+          flexDirection: { xs: "column", md: "row" },
           px: 2,
           py: 2,
           alignItems: "center",
@@ -127,17 +155,58 @@ const Cart = () => {
           gap: 2,
         }}
       >
-        <Avatar src={item.image_url || item.img_url} variant="rounded" sx={{ width: 60, height: 60 }} />
-        <Box>
-          <Typography fontWeight="bold">
-            {item.type === "visa" ? "Visa Service" : "Course"}
-          </Typography>
-          <Typography fontSize={14} color="text.secondary">
-            {item.displayName}
-          </Typography>
+        {/* Mobile Layout */}
+        <Box sx={{ display: { xs: "flex", md: "contents" }, width: "100%", gap: 2 }}>
+          <Avatar 
+            src={item.image_url || item.img_url} 
+            variant="rounded" 
+            sx={{ 
+              width: { xs: 80, md: 60 }, 
+              height: { xs: 80, md: 60 },
+              flexShrink: 0
+            }} 
+          />
+          <Box sx={{ flex: 1 }}>
+            <Typography fontWeight="bold" sx={{ fontSize: { xs: "1rem", md: "0.875rem" } }}>
+              {item.type === "visa" ? "Visa Service" : "Course"}
+            </Typography>
+            <Typography fontSize={{ xs: 14, md: 14 }} color="text.secondary" sx={{ mb: { xs: 1, md: 0 } }}>
+              {item.displayName}
+            </Typography>
+            
+            {/* Mobile: Price, Quantity, Total in a row */}
+            <Box sx={{ display: { xs: "flex", md: "none" }, justifyContent: "space-between", alignItems: "center", mt: 1 }}>
+              <Typography fontWeight="medium" sx={{ fontSize: "0.875rem" }}>₹{price}</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", border: "1px solid #ccc", borderRadius: 1 }}>
+                <IconButton size="small" onClick={() => handleQuantityChange(item.type, item.id, "dec")}>
+                  <Remove fontSize="small" />
+                </IconButton>
+                <Typography sx={{ px: 1, minWidth: "30px", textAlign: "center", fontSize: "0.875rem" }}>
+                  {item.quantity}
+                </Typography>
+                <IconButton size="small" onClick={() => handleQuantityChange(item.type, item.id, "inc")}>
+                  <Add fontSize="small" />
+                </IconButton>
+              </Box>
+              <Typography fontWeight="bold" color="success.main" sx={{ fontSize: "0.875rem" }}>₹{total}</Typography>
+            </Box>
+          </Box>
+          <IconButton 
+            onClick={() => handleDelete(item.type, item.id)}
+            sx={{ alignSelf: { xs: "flex-start", md: "center" } }}
+          >
+            <Close />
+          </IconButton>
         </Box>
-        <Typography fontWeight="medium">₹{price}</Typography>
-        <Box sx={{ display: "flex", alignItems: "center", border: "1px solid #ccc", borderRadius: 1 }}>
+
+        {/* Desktop Layout - Hidden on mobile */}
+        <Typography fontWeight="medium" sx={{ display: { xs: "none", md: "block" } }}>₹{price}</Typography>
+        <Box sx={{ 
+          display: { xs: "none", md: "flex" }, 
+          alignItems: "center", 
+          border: "1px solid #ccc", 
+          borderRadius: 1 
+        }}>
           <IconButton size="small" onClick={() => handleQuantityChange(item.type, item.id, "dec")}>
             <Remove fontSize="small" />
           </IconButton>
@@ -148,52 +217,57 @@ const Cart = () => {
             <Add fontSize="small" />
           </IconButton>
         </Box>
-        <Box />
-        <Typography fontWeight="bold" color="success.main">₹{total}</Typography>
-        <IconButton onClick={() => handleDelete(item.type, item.id)}>
-          <Close />
-        </IconButton>
+        <Box sx={{ display: { xs: "none", md: "block" } }} />
+        <Typography fontWeight="bold" color="success.main" sx={{ display: { xs: "none", md: "block" } }}>₹{total}</Typography>
       </MotionBox>
     );
   };
 
   return (
     <>
-      {/* Banner */}
-      <Box
-        sx={{
-          height: 300,
-          backgroundImage: "url(/PageBanner.jpg)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          display: "flex",
-          alignItems: "center",
-          color: "#fff",
-          position: "relative",
-        }}
-      >
-        <Box sx={{ position: "absolute", width: "100%", height: "100%", bgcolor: "rgba(0,0,0,0.6)" }} />
-        <Box sx={{ position: "relative", zIndex: 1, px: 10, width: "100%" }}>
-          <Typography variant="h3" fontWeight="bold" sx={{ mb: 1 }}>
-            Your Cart
-          </Typography>
-          <Breadcrumbs sx={{ color: "#FF5252" }} separator="›">
-            <Link 
-              underline="hover" 
-              href="/" 
-              sx={{ 
-                color: "#FF5252", 
-                "&:hover": { color: "#fff" }
+      
+            {/* Top Banner */}
+            <Box
+              sx={{
+                height: '300px',
+                backgroundImage: 'url(/PageBanner.jpg)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#fff',
+                position: 'relative',
               }}
             >
-              Home
-            </Link>
-            <Typography sx={{ color: "#FF5252" }}>
-              Cart
-            </Typography>
-          </Breadcrumbs>
-        </Box>
-      </Box>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                }}
+              />
+              <Box
+                sx={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: '100%',
+                  px: { xs: 2, md: 10 },
+                }}
+              >
+                <Typography variant="h3" fontWeight="bold">
+                  Your Cart
+                </Typography>
+                <Breadcrumbs sx={{ color: '#FF5252', mt: 1 }} separator="›">
+                  <Link underline="hover" href="/" sx={{ color: '#FF5252', '&:hover': { color: '#fff' } }}>
+                    Home
+                  </Link>
+                  <Typography sx={{ color: '#FF5252' }}>Cart</Typography>
+                </Breadcrumbs>
+              </Box>
+            </Box>
 
       {/* Main Cart */}
       <Container maxWidth="lg" sx={{ py: 5 }}>
@@ -220,132 +294,97 @@ const Cart = () => {
             </Button>
           </Paper>
         ) : (
-          <Grid container spacing={4}>
+          <Stack spacing={4}>
             {/* Cart Items */}
-            <Grid item xs={12} lg={8}>
-              <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h5" fontWeight="bold" mb={3} textAlign="center">
-                  Order Details ({allCartItems.length} item{allCartItems.length > 1 ? 's' : ''})
-                </Typography>
+            <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
+              <Typography variant="h5" fontWeight="bold" mb={3} textAlign="center">
+                Order Details ({allCartItems.length} item{allCartItems.length > 1 ? 's' : ''})
+              </Typography>
 
-                {/* Desktop Header */}
-                <Box
+              {/* Desktop Header - Hidden on mobile */}
+              <Box
+                sx={{
+                  display: { xs: "none", md: "grid" },
+                  gridTemplateColumns: "60px 3fr 1fr 1fr 1fr 1fr 40px",
+                  px: 2,
+                  py: 1,
+                  backgroundColor: "#f5f5f5",
+                  borderBottom: "1px solid #ddd",
+                  gap: 2,
+                  borderRadius: 1,
+                  mb: 2,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">Photo</Typography>
+                <Typography variant="subtitle2" fontWeight="bold">Product</Typography>
+                <Typography variant="subtitle2" fontWeight="bold">Price</Typography>
+                <Typography variant="subtitle2" fontWeight="bold">Qty</Typography>
+                <Box />
+                <Typography variant="subtitle2" fontWeight="bold">Total</Typography>
+                <Box />
+              </Box>
+
+              {/* Cart Items */}
+              {allCartItems.map((item, index) => (
+                <DesktopCartItem key={item.id} item={item} index={index} />
+              ))}
+            </Paper>
+
+            {/* Cart Totals - Full Width */}
+            <Paper elevation={3} sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
+              <Typography variant="h6" fontWeight="bold" mb={2}>
+                Cart Totals
+              </Typography>
+              <Stack spacing={1} mb={2}>
+                <Box display="flex" justifyContent="space-between">
+                  <Typography>Subtotal</Typography>
+                  <Typography fontWeight="medium">₹{subtotal.toLocaleString()}</Typography>
+                </Box>
+                
+                {/* Dynamic Additional Charges */}
+                {chargeBreakdown.map((charge, index) => (
+                  <Box key={index} display="flex" justifyContent="space-between">
+                    <Typography>{charge.label}</Typography>
+                    <Typography fontWeight="medium">₹{charge.amount.toLocaleString()}</Typography>
+                  </Box>
+                ))}
+                
+                {chargeBreakdown.length === 0 && (
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography>Additional Charges</Typography>
+                    <Typography fontWeight="medium">₹0</Typography>
+                  </Box>
+                )}
+              </Stack>
+              <Divider sx={{ my: 2 }} />
+              <Box display="flex" justifyContent="space-between" mb={3}>
+                <Typography variant="h6" fontWeight="bold">Total</Typography>
+                <Typography variant="h6" fontWeight="bold" color="success.main">
+                  ₹{orderTotal.toLocaleString()}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: { xs: "stretch", md: "flex-end" } }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCheckout}
+                  disabled={allCartItems.length === 0}
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: "60px 3fr 1fr 1fr 1fr 1fr 40px",
-                    px: 2,
-                    py: 1,
-                    backgroundColor: "#f5f5f5",
-                    borderBottom: "1px solid #ddd",
-                    gap: 2,
-                    borderRadius: 1,
-                    mb: 2,
+                    backgroundColor: "#ff5252",
+                    py: 1.5,
+                    px: { xs: 4, md: 6 },
+                    fontWeight: "bold",
+                    fontSize: "1.1rem",
+                    width: { xs: "100%", md: "auto" },
+                    minWidth: { md: "200px" },
+                    "&:hover": { backgroundColor: "#f44336" },
+                    "&:disabled": { backgroundColor: "#ccc" },
                   }}
                 >
-                  <Typography variant="subtitle2" fontWeight="bold">Photo</Typography>
-                  <Typography variant="subtitle2" fontWeight="bold">Product</Typography>
-                  <Typography variant="subtitle2" fontWeight="bold">Price</Typography>
-                  <Typography variant="subtitle2" fontWeight="bold">Qty</Typography>
-                  <Box />
-                  <Typography variant="subtitle2" fontWeight="bold">Total</Typography>
-                  <Box />
-                </Box>
-
-                {/* Cart Items */}
-                {allCartItems.map((item, index) => (
-                  <DesktopCartItem key={item.id} item={item} index={index} />
-                ))}
-              </Paper>
-            </Grid>
-
-            {/* Desktop Sidebar */}
-            <Grid item xs={12} lg={4}>
-              <Stack spacing={3}>
-                {/* Calculate Shipping */}
-                <Card elevation={3} sx={{ p: 3 }}>
-                  <Typography variant="h6" fontWeight="bold" mb={2}>
-                    Calculate Shipping
-                  </Typography>
-                  <Stack spacing={2}>
-                    <TextField 
-                      select 
-                      fullWidth 
-                      SelectProps={{ native: true }} 
-                      size="small"
-                      variant="outlined"
-                    >
-                      <option value="">Select Country</option>
-                      <option value="india">India</option>
-                      <option value="usa">USA</option>
-                    </TextField>
-                    <TextField 
-                      label="State/Province" 
-                      size="small" 
-                      fullWidth 
-                      variant="outlined"
-                    />
-                    <TextField 
-                      label="ZIP / Postcode" 
-                      size="small" 
-                      fullWidth 
-                      variant="outlined"
-                    />
-                    <Button 
-                      variant="contained" 
-                      fullWidth
-                      sx={{ 
-                        backgroundColor: "#ff5252", 
-                        "&:hover": { backgroundColor: "#f44336" },
-                        py: 1.5,
-                      }}
-                    >
-                      Update Totals
-                    </Button>
-                  </Stack>
-                </Card>
-
-                {/* Cart Totals */}
-                <Card elevation={3} sx={{ p: 3 }}>
-                  <Typography variant="h6" fontWeight="bold" mb={2}>
-                    Cart Totals
-                  </Typography>
-                  <Stack spacing={1} mb={2}>
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography>Subtotal</Typography>
-                      <Typography fontWeight="medium">₹{subtotal}</Typography>
-                    </Box>
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography>Shipping</Typography>
-                      <Typography fontWeight="medium">₹{shipping.toFixed(2)}</Typography>
-                    </Box>
-                  </Stack>
-                  <Divider sx={{ my: 2 }} />
-                  <Box display="flex" justifyContent="space-between" mb={3}>
-                    <Typography variant="h6" fontWeight="bold">Total</Typography>
-                    <Typography variant="h6" fontWeight="bold" color="success.main">
-                      ₹{orderTotal}
-                    </Typography>
-                  </Box>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={handlePayment}
-                    disabled={allCartItems.length === 0}
-                    sx={{
-                      backgroundColor: "#ff5252",
-                      py: 1.5,
-                      fontWeight: "bold",
-                      fontSize: "1.1rem",
-                      "&:hover": { backgroundColor: "#f44336" },
-                      "&:disabled": { backgroundColor: "#ccc" },
-                    }}
-                  >
-                    Proceed to Checkout
-                  </Button>
-                </Card>
-              </Stack>
-            </Grid>
-          </Grid>
+                  Proceed to Checkout
+                </Button>
+              </Box>
+            </Paper>
+          </Stack>
         )}
       </Container>
     </>

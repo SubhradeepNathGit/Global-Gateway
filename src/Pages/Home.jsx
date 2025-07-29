@@ -30,8 +30,7 @@ const Home = () => {
     <TeamSection/>
     <FAQSection/>
     <Testimonials/>
-    <VisaCardsSection/>
-    <CoachingCards/>
+    
     
    
     

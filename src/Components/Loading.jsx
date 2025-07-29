@@ -7,43 +7,41 @@ import { useSelector } from 'react-redux';
 const LoadingAnimation = () => {
   const { isLoading, loadingMessage } = useSelector((state) => state.loading);
 
-  // Container animation variants
   const containerVariants = {
     initial: { opacity: 0 },
-    animate: { 
+    animate: {
       opacity: 1,
-      transition: { duration: 0.3 }
+      transition: { duration: 0.3 },
     },
-    exit: { 
+    exit: {
       opacity: 0,
       scale: 0.95,
-      transition: { duration: 0.4 }
-    }
+      transition: { duration: 0.4 },
+    },
   };
 
-
   const planeVariants = {
-    initial: { 
+    initial: {
       x: -100,
       opacity: 0,
-      rotate: -10
+      rotate: -10,
     },
-    animate: { 
+    animate: {
       x: 0,
       opacity: 1,
       rotate: 0,
       transition: {
         duration: 1.2,
-        ease: "easeOut"
-      }
+        ease: 'easeOut',
+      },
     },
     float: {
       y: [-5, 5, -5],
       transition: {
         duration: 3,
         repeat: Infinity,
-        ease: "easeInOut"
-      }
+        ease: 'easeInOut',
+      },
     },
     takeoff: {
       y: -500,
@@ -53,23 +51,22 @@ const LoadingAnimation = () => {
       opacity: 0,
       transition: {
         duration: 1.5,
-        ease: "easeInOut"
-      }
-    }
+        ease: 'easeInOut',
+      },
+    },
   };
 
-  // Text animation variants
   const textVariants = {
     initial: { y: 30, opacity: 0 },
-    animate: { 
-      y: 0, 
+    animate: {
+      y: 0,
       opacity: 1,
-      transition: { 
+      transition: {
         delay: 0.8,
         duration: 0.6,
-        ease: "easeOut"
-      }
-    }
+        ease: 'easeOut',
+      },
+    },
   };
 
   return (
@@ -87,50 +84,56 @@ const LoadingAnimation = () => {
             width: '100%',
             height: '100%',
             zIndex: 9999,
-            background: 'hsla(208, 41%, 15%, 1.00)',
+            backgroundImage: 'url("/Slider1.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}
         >
-          {/* Background animated shapes */}
+          {/* Dark Blur Overlay */}
           <Box
             sx={{
               position: 'absolute',
               width: '100%',
               height: '100%',
-              
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              zIndex: 0,
             }}
-          >
-            {/* Floating circles */}
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{
-                  x: [0, 100, 0],
-                  y: [0, -100, 0],
-                  opacity: [0.05, 0.15, 0.05]
-                }}
-                transition={{
-                  duration: 8 + i * 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.5
-                }}
-                style={{
-                  position: 'absolute',
-                  width: 80 + i * 20,
-                  height: 80 + i * 20,
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  left: `${10 + i * 15}%`,
-                  top: `${10 + i * 10}%`,
-                }}
-              />
-            ))}
-          </Box>
+          />
 
-          {/* Main content container */}
+          {/* Floating circles */}
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                x: [0, 100, 0],
+                y: [0, -100, 0],
+                opacity: [0.05, 0.15, 0.05],
+              }}
+              transition={{
+                duration: 8 + i * 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.5,
+              }}
+              style={{
+                position: 'absolute',
+                width: 80 + i * 20,
+                height: 80 + i * 20,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.05)',
+                left: `${10 + i * 15}%`,
+                top: `${10 + i * 10}%`,
+                zIndex: 0,
+              }}
+            />
+          ))}
+
+          {/* Main content */}
           <Box
             sx={{
               display: 'flex',
@@ -139,15 +142,15 @@ const LoadingAnimation = () => {
               gap: 4,
               zIndex: 1,
               textAlign: 'center',
-              px: 4
+              px: 4,
             }}
           >
-            {/* Animated plane icon */}
+            {/* Plane icon */}
             <Box sx={{ position: 'relative' }}>
               <motion.div
                 variants={planeVariants}
                 initial="initial"
-                animate={!isLoading ? ["takeoff"] : ["animate", "float"]}
+                animate={!isLoading ? ['takeoff'] : ['animate', 'float']}
               >
                 <Box
                   sx={{
@@ -159,26 +162,25 @@ const LoadingAnimation = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}
                 >
                   <FlightIcon
                     sx={{
                       fontSize: 50,
                       color: 'white',
-                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))'
+                      filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4))',
                     }}
                   />
                 </Box>
               </motion.div>
 
-              {/* Rotating ring around plane */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{
                   duration: 8,
                   repeat: Infinity,
-                  ease: "linear"
+                  ease: 'linear',
                 }}
                 style={{
                   position: 'absolute',
@@ -189,45 +191,41 @@ const LoadingAnimation = () => {
                   borderRadius: '50%',
                   border: '2px solid transparent',
                   borderTop: '2px solid rgba(255, 255, 255, 0.3)',
-                  borderRight: '2px solid rgba(255, 255, 255, 0.1)'
+                  borderRight: '2px solid rgba(255, 255, 255, 0.1)',
                 }}
               />
             </Box>
 
-            {/* Loading text */}
-            <motion.div
-              variants={textVariants}
-              initial="initial"
-              animate="animate"
-            >
+            {/* Title and subtitle */}
+            <motion.div variants={textVariants} initial="initial" animate="animate">
               <Typography
                 variant="h4"
                 sx={{
-                  color: 'white',
-                  fontWeight: 300,
+                  color: 'red',
+                  fontWeight: 600,
                   letterSpacing: '0.05em',
                   mb: 1,
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
                 }}
               >
-                Welcome to Global Gateway
+                Global Gateway
               </Typography>
-              
+
               <Typography
                 variant="body1"
                 sx={{
                   color: 'rgba(255, 255, 255, 0.7)',
                   fontWeight: 300,
                   letterSpacing: '0.1em',
-                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                  fontSize: { xs: '0.9rem', sm: '1rem' },
                 }}
               >
                 Crafting Comfort Across Continents over a Decade
               </Typography>
             </motion.div>
 
-            {/* Modern progress bar - RED */}
+            {/* Progress bar */}
             <Box sx={{ width: '300px', maxWidth: '80vw', position: 'relative' }}>
               <LinearProgress
                 sx={{
@@ -237,26 +235,26 @@ const LoadingAnimation = () => {
                   '& .MuiLinearProgress-bar': {
                     borderRadius: 3,
                     background: 'linear-gradient(90deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
-                    boxShadow: '0 2px 10px rgba(239, 68, 68, 0.4)'
-                  }
+                    boxShadow: '0 2px 10px rgba(239, 68, 68, 0.4)',
+                  },
                 }}
               />
             </Box>
 
-            {/* Animated dots */}
+            {/* Dots animation */}
             <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
               {[0, 1, 2].map((index) => (
                 <motion.div
                   key={index}
                   animate={{
                     scale: [1, 1.4, 1],
-                    opacity: [0.3, 0.8, 0.3]
+                    opacity: [0.3, 0.8, 0.3],
                   }}
                   transition={{
                     duration: 1.5,
                     repeat: Infinity,
                     delay: index * 0.3,
-                    ease: "easeInOut"
+                    ease: 'easeInOut',
                   }}
                 >
                   <Box
@@ -265,7 +263,7 @@ const LoadingAnimation = () => {
                       height: 12,
                       borderRadius: '50%',
                       background: 'rgba(255, 255, 255, 0.6)',
-                      boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)'
+                      boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2)',
                     }}
                   />
                 </motion.div>
